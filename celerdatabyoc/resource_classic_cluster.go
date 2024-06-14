@@ -222,9 +222,19 @@ func resourceClassicCluster() *schema.Resource {
 					return warnings, errors
 				},
 			},
+			"run_scripts_timeout": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      3600,
+				ValidateFunc: validation.IntAtMost(int(common.DeployOrScaleClusterTimeout.Seconds())),
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(common.DeployOrScaleClusterTimeout),
+			Update: schema.DefaultTimeout(common.DeployOrScaleClusterTimeout),
 		},
 	}
 }
@@ -247,6 +257,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 		DataCredId:         d.Get("data_credential_id").(string),
 		RunScriptsParallel: d.Get("run_scripts_parallel").(bool),
 		QueryPort:          int32(d.Get("query_port").(int)),
+		RunScriptsTimeout:  int32(d.Get("run_scripts_timeout").(int)),
 	}
 
 	if v, ok := d.GetOk("resource_tags"); ok {
@@ -304,7 +315,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 		clusterAPI: clusterAPI,
 		clusterID:  resp.ClusterID,
 		actionID:   resp.ActionID,
-		timeout:    30 * time.Minute,
+		timeout:    common.DeployOrScaleClusterTimeout,
 		pendingStates: []string{
 			string(cluster.ClusterStateDeploying),
 			string(cluster.ClusterStateScaling),
@@ -576,7 +587,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 			clusterAPI:    clusterAPI,
 			actionID:      resp.ActionId,
 			clusterID:     clusterID,
-			timeout:       30 * time.Minute,
+			timeout:       common.DeployOrScaleClusterTimeout,
 			pendingStates: []string{string(cluster.ClusterStateScaling)},
 			targetStates:  []string{string(cluster.ClusterStateRunning), string(cluster.ClusterStateAbnormal)},
 		})
@@ -622,7 +633,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 			clusterAPI:    clusterAPI,
 			actionID:      actionID,
 			clusterID:     clusterID,
-			timeout:       30 * time.Minute,
+			timeout:       common.DeployOrScaleClusterTimeout,
 			pendingStates: []string{string(cluster.ClusterStateScaling)},
 			targetStates:  []string{string(cluster.ClusterStateRunning), string(cluster.ClusterStateAbnormal)},
 		})
@@ -651,7 +662,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 			clusterAPI:    clusterAPI,
 			actionID:      resp.ActionId,
 			clusterID:     clusterID,
-			timeout:       30 * time.Minute,
+			timeout:       common.DeployOrScaleClusterTimeout,
 			pendingStates: []string{string(cluster.ClusterStateScaling)},
 			targetStates:  []string{string(cluster.ClusterStateRunning), string(cluster.ClusterStateAbnormal)},
 		})
@@ -697,7 +708,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 			clusterAPI:    clusterAPI,
 			actionID:      actionID,
 			clusterID:     clusterID,
-			timeout:       30 * time.Minute,
+			timeout:       common.DeployOrScaleClusterTimeout,
 			pendingStates: []string{string(cluster.ClusterStateScaling)},
 			targetStates:  []string{string(cluster.ClusterStateRunning), string(cluster.ClusterStateAbnormal)},
 		})
@@ -736,7 +747,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 			clusterAPI:    clusterAPI,
 			actionID:      resp.ActionId,
 			clusterID:     clusterID,
-			timeout:       30 * time.Minute,
+			timeout:       common.DeployOrScaleClusterTimeout,
 			pendingStates: []string{string(cluster.ClusterStateScaling)},
 			targetStates:  []string{string(cluster.ClusterStateRunning), string(cluster.ClusterStateAbnormal)},
 		})
